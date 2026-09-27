@@ -1,0 +1,82 @@
+---
+title: "p8105_hw1_jg5188"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+```
+
+## Problem 1
+
+First, load the `penguins` dataset:
+
+```{r load_penguins}
+data("penguins", package = "palmerpenguins")
+```
+
+The `penguins` dataset has info on penguins collected by Dr. Kristen Gorman near Palmer Station, Antarctica. Some key variables in the dataset are `species`, `island`, `bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`, `body_mass_g`, `sex`, and `year`.
+
+* The dataset has `r nrow(penguins)` rows and `r ncol(penguins)` columns.
+* The mean flipper length across penguins is `r round(mean(penguins$flipper_length_mm, na.rm = TRUE), 2)` mm.
+
+Below is a scatterplot of flipper length vs. bill length, color-coded by penguin species:
+
+```{r scatterplot}
+ggplot(penguins, aes(x = bill_length_mm, y = flipper_length_mm, color = species)) +
+  geom_point() +
+  labs(
+    title = "Flipper Length vs Bill Length",
+    x = "Bill Length (mm)",
+    y = "Flipper Length (mm)"
+  )
+
+ggsave("scatterplot_flipper_vs_bill.png")
+```
+
+
+## Problem 2
+
+Create a data frame with the four requested vector types:
+
+```{r create_df}
+set.seed(42)
+
+prob2_df = tibble(
+  norm_sample = rnorm(10),
+  norm_pos = norm_sample > 0,
+  char_vec = c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"),
+  factor_vec = factor(rep(c("low", "medium", "high"), length.out = 10))
+)
+```
+
+Now try taking the mean of each column:
+
+```{r try_means}
+# Numeric vector
+mean(pull(prob2_df, norm_sample))
+
+# Logical vector
+mean(pull(prob2_df, norm_pos))
+
+# Character vector
+mean(pull(prob2_df, char_vec))
+
+# Factor vector
+mean(pull(prob2_df, factor_vec))
+```
+
+Taking the mean works for `norm_sample` (numeric) and `norm_pos` (logical). It fails and returns `NA` with a warning for `char_vec` (character) and `factor_vec` (factor).
+
+Next, apply `as.numeric` to convert the logical, character, and factor variables:
+
+```{r explicit_coercion, eval = FALSE}
+as.numeric(pull(prob2_df, norm_pos))
+as.numeric(pull(prob2_df, char_vec))
+as.numeric(pull(prob2_df, factor_vec))
+```
+
+* **Logical:** `TRUE` converts to `1` and `FALSE` to `0`. This is why taking the mean works directly on logical vectors—R automatically converts them to 1s and 0s, giving the proportion of `TRUE` values.
+* **Character:** Converts everything to `NA` because letters cannot be converted into numbers. This explains why `mean()` doesn't work on character vectors.
+* **Factor:** Converts factor levels into their underlying integers (1, 2, 3). Even though `as.numeric()` works here, R won't let `mean()` convert factors automatically to avoid taking meaningless averages of categorical categories.
